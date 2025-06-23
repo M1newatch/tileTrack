@@ -8,14 +8,15 @@
 #include <math.h>
 #include <iomanip>
 #include <sstream>
-#include "maze_structs.h"
-#include "json.hpp" // nlohmann/json
 #include <set>
 #include <tuple>
 #include <queue>
 #include <unordered_map>
 #include <array>
 #include <stack>
+
+#include "maze_structs.h"
+#include "json.hpp" // nlohmann/json
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -68,7 +69,7 @@ Bounds calculateBounds(const std::list<Mazepolygon>& polygons) {
 }
 
 // Exportiert die Strecke als SVG
-void exportSVG(const std::list<Mazepolygon>& polygons, const std::string& filename) {
+void exportSVG(const std::list<Mazepolygon>& polygons, const std::string& filename, const std::vector<SolutionGraphNode>* solutionGraph = nullptr) {
     std::ofstream svg(filename);
     
     // Berechne Bounds
@@ -96,6 +97,15 @@ void exportSVG(const std::list<Mazepolygon>& polygons, const std::string& filena
             first = false;
         }
         svg << " Z\" fill=\"#333333\" stroke=\"none\"/>\n";
+    }
+    
+    // Zeichne Solution-Graph als rote Linie
+    if (solutionGraph && !solutionGraph->empty()) {
+        svg << "    <polyline fill=\"none\" stroke=\"red\" stroke-width=\"0.1\" points=\"";
+        for (const auto& node : *solutionGraph) {
+            svg << node.coordinate.x << "," << node.coordinate.y << " ";
+        }
+        svg << "\" />\n";
     }
     
     // Zeichne Koordinatensystem
@@ -149,8 +159,8 @@ bool canClosePath(const Position& start, const Position& current, float threshol
     
     // Prüfe ob der Winkel ungefähr passt (erlaubt 90-Grad-Schritte)
     float angleDiff = std::fmod(std::abs(current.angle - start.angle), 2 * M_PI);
-    bool angleAligned = angleDiff < 0.1f || std::abs(angleDiff - M_PI/2) < 0.1f || 
-                       std::abs(angleDiff - M_PI) < 0.1f || std::abs(angleDiff - 3*M_PI/2) < 0.1f;
+    bool angleAligned = angleDiff < 0.1f /*|| std::abs(angleDiff - M_PI/2) < 0.1f || 
+                       std::abs(angleDiff - M_PI) < 0.01f || std::abs(angleDiff - 3*M_PI/2) < 0.01f*/;
     
     return dist < threshold && angleAligned;
 }
@@ -518,8 +528,7 @@ std::vector<std::pair<std::string, const Connection*>> generateTrackAStar(const 
     return {};
 }
 
-constexpr int GRID_SIZE = 15;
-constexpr int MAX_TILES = GRID_SIZE * GRID_SIZE;
+constexpr int GRID_SIZE = 5;
 
 struct GridCell {
     bool inPath = false;
@@ -537,14 +546,15 @@ std::vector<std::pair<int, int>> getNeighbors(int x, int y, std::mt19937& rng) {
 }
 
 // Maze-Backtracking für einfachen Pfad (kein Loop)
-bool generateSimplePath(std::array<std::array<GridCell, GRID_SIZE>, GRID_SIZE>& grid, int startX, int startY, int& pathLen, int& endX, int& endY, std::mt19937& rng) {
+bool generateSimplePath(std::array<std::array<GridCell, GRID_SIZE>, GRID_SIZE>& grid, int startX, int startY, int& pathLen, int& endX, int& endY, std::mt19937& rng, std::vector<std::pair<int,int>>& pathOrder) {
     std::stack<std::tuple<int, int, float>> stack;
     stack.push({startX, startY, 0.0f});
     grid[startY][startX].inPath = true;
     pathLen = 1;
     int maxLen = 1;
     int bestX = startX, bestY = startY;
-    while (!stack.empty() && pathLen < MAX_TILES) {
+    pathOrder.push_back({startX, startY});
+    while (!stack.empty() && pathLen < GRID_SIZE*GRID_SIZE) {
         auto [x, y, angle] = stack.top();
         stack.pop();
         std::vector<std::pair<int, int>> neighbors = getNeighbors(x, y, rng);
@@ -557,6 +567,7 @@ bool generateSimplePath(std::array<std::array<GridCell, GRID_SIZE>, GRID_SIZE>& 
                 grid[ny][nx].angle = angle;
                 pathLen++;
                 stack.push({nx, ny, angle});
+                pathOrder.push_back({nx, ny});
                 extended = true;
                 if (pathLen > maxLen) {
                     maxLen = pathLen;
@@ -567,8 +578,9 @@ bool generateSimplePath(std::array<std::array<GridCell, GRID_SIZE>, GRID_SIZE>& 
             }
         }
         if (!extended) {
-            // Dead end, backtrack
             pathLen--;
+            // Backtrack: entferne letzte Zelle aus pathOrder
+            if (!pathOrder.empty()) pathOrder.pop_back();
         }
     }
     endX = bestX;
@@ -578,7 +590,6 @@ bool generateSimplePath(std::array<std::array<GridCell, GRID_SIZE>, GRID_SIZE>& 
 
 // Tile-Auswahl für Pfad
 std::string chooseTileForCell(const std::array<std::array<GridCell, GRID_SIZE>, GRID_SIZE>& grid, int x, int y) {
-    // Zähle Nachbarn im Pfad
     int count = 0;
     bool up = false, down = false, left = false, right = false;
     if (y > 0 && grid[y-1][x].inPath) { count++; up = true; }
@@ -599,7 +610,6 @@ std::string chooseTileForCell(const std::array<std::array<GridCell, GRID_SIZE>, 
     return "straight"; // Fallback
 }
 
-// Bestimme die Rotation für ein Tile anhand der Nachbarschaft
 float determineTileAngle(const std::array<std::array<GridCell, GRID_SIZE>, GRID_SIZE>& grid, int x, int y, const std::string& tileName) {
     bool up = (y > 0 && grid[y-1][x].inPath);
     bool down = (y < GRID_SIZE-1 && grid[y+1][x].inPath);
@@ -629,7 +639,6 @@ float determineTileAngle(const std::array<std::array<GridCell, GRID_SIZE>, GRID_
         if (up && right) return 180.0f;
         if (right && down) return 270.0f;
     } else if (tileName == "t_junction") {
-        // Öffnung zeigt zur Seite ohne Nachbarn
         if (!up) return 270.0f;
         if (!right) return 0.0f;
         if (!down) return 90.0f;
@@ -638,6 +647,22 @@ float determineTileAngle(const std::array<std::array<GridCell, GRID_SIZE>, GRID_
         return 0.0f;
     }
     return 0.0f; // Fallback
+}
+
+// Solution-Graph für die Strecke generieren (einfach: Mittelpunkte der Tiles verbinden)
+std::vector<SolutionGraphNode> generateSolutionGraph(const std::vector<MazeCoordinate>& centers) {
+    std::vector<SolutionGraphNode> nodes(centers.size());
+    for (size_t i = 0; i < centers.size(); ++i) {
+        nodes[i].coordinate.x = centers[i].x;
+        nodes[i].coordinate.y = centers[i].y;
+        if (i > 0) nodes[i].neighbors.push_back(&nodes[i-1]);
+        if (i+1 < centers.size()) nodes[i].neighbors.push_back(&nodes[i+1]);
+    }
+    return nodes;
+}
+
+bool isDriveableTile(const std::string& name) {
+    return name == "straight" || name.find("curve_") == 0 || name == "t_junction" || name == "cross";
 }
 
 int main(int argc, char* argv[]) {
@@ -652,23 +677,20 @@ int main(int argc, char* argv[]) {
     auto tiles = loadTileset(tileset_file);
     std::mt19937 rng(seed);
 
-    // Map für schnellen Tile-Zugriff
     std::map<std::string, Tile> tileMap;
     for (const auto& tile : tiles) {
         tileMap[tile.name] = tile;
     }
-    // Grid initialisieren
     std::array<std::array<GridCell, GRID_SIZE>, GRID_SIZE> grid{};
     int startX = GRID_SIZE / 2, startY = GRID_SIZE / 2;
     int pathLen = 0;
     int endX = startX, endY = startY;
-    // Erzeuge einfachen Pfad (kein Loop)
-    bool pathOk = generateSimplePath(grid, startX, startY, pathLen, endX, endY, rng);
+    std::vector<std::pair<int,int>> pathOrder;
+    bool pathOk = generateSimplePath(grid, startX, startY, pathLen, endX, endY, rng, pathOrder);
     if (!pathOk) {
         std::cout << "Konnte keinen Pfad im Grid erzeugen!\n";
         return 1;
     }
-    // Tiles im gesamten Grid setzen
     for (int y = 0; y < GRID_SIZE; ++y) {
         for (int x = 0; x < GRID_SIZE; ++x) {
             if (grid[y][x].inPath) {
@@ -680,27 +702,27 @@ int main(int argc, char* argv[]) {
             }
         }
     }
-    // Polygone generieren
     std::list<Mazepolygon> polygons;
-    for (int y = 0; y < GRID_SIZE; ++y) {
-        for (int x = 0; x < GRID_SIZE; ++x) {
-            if (grid[y][x].inPath) {
-                const Tile& tile = tileMap[grid[y][x].tileName];
-                float gx = x * 1.0f;
-                float gy = y * 1.0f;
-                float angle = grid[y][x].angle;
-                for (const auto& wall : tile.walls) {
-                    auto global_coords = transform(wall, gx, gy, angle * M_PI / 180.0f);
-                    Mazepolygon poly;
-                    for (const auto& [gx, gy] : global_coords) {
-                        poly.coordinates.push_back({gx, gy});
-                    }
-                    polygons.push_back(poly);
+    std::vector<MazeCoordinate> solutionCenters;
+    for (const auto& [x, y] : pathOrder) {
+        if (isDriveableTile(grid[y][x].tileName)) {
+            const Tile& tile = tileMap[grid[y][x].tileName];
+            float gx = x * 1.0f;
+            float gy = y * 1.0f;
+            float angle = grid[y][x].angle * M_PI / 180.0f;
+            for (const auto& wall : tile.walls) {
+                auto global_coords = transform(wall, gx, gy, angle);
+                Mazepolygon poly;
+                for (const auto& [gx, gy] : global_coords) {
+                    poly.coordinates.push_back({gx, gy});
                 }
+                polygons.push_back(poly);
             }
+            // Mittelpunkt der Zelle als Solution-Graph-Node
+            solutionCenters.push_back({gx + 0.5f, gy + 0.5f});
         }
     }
-
+    std::vector<SolutionGraphNode> solutionGraph = generateSolutionGraph(solutionCenters);
     std::ofstream out(output_file);
     out << "#include <list>\n";
     out << "#include \"maze_structs.h\"\n\n";
@@ -717,16 +739,32 @@ int main(int argc, char* argv[]) {
         out << "    polygons.push_back(poly" << idx << ");\n";
         idx++;
     }
+
+        // SolutionGraphNode-Definition
+    int nNodes = solutionCenters.size();
+    for (int i = 0; i < nNodes; ++i) {
+        out << "    SolutionGraphNode node" << (i+1) << ";\n";
+        out << "    node" << (i+1) << ".coordinate = {"
+            << std::fixed << std::setprecision(1)
+            << solutionCenters[i].x << "f, " << solutionCenters[i].y << "f};\n";
+    }
+    for (int i = 0; i < nNodes; ++i) {
+        if (i > 0)
+            out << "    node" << (i+1) << ".neighbors.push_back(&node" << i << ");\n";
+        if (i+1 < nNodes)
+            out << "    node" << (i+1) << ".neighbors.push_back(&node" << (i+2) << ");\n";
+    }
+    out << "\n";
+    for (int i = 0; i < nNodes; ++i) {
+        out << "    solutionGraph.push_back(node" << (i+1) << ");\n";
+    }
+
     out << "}\n";
     out.close();
-
     std::cout << "Strecke generiert und in " << output_file << " geschrieben.\n";
     std::cout << "Anzahl der generierten Polygone: " << idx << "\n";
-
-    // Nach der Streckengenerierung, exportiere auch als SVG
     std::string svg_file = "track.svg";
-    exportSVG(polygons, svg_file);
+    exportSVG(polygons, svg_file, &solutionGraph);
     std::cout << "SVG-Visualisierung in " << svg_file << " gespeichert.\n";
-
     return 0;
 } 
