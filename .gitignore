@@ -1,1 +1,4 @@
 trackgen.exe
+.vscode
+track.svg
+output.cpp

@@ -410,4 +410,3 @@ int main(int argc, char* argv[]) {
     std::cout << "Anzahl der generierten Polygone: " << polygons.size() << "\n";
     return 0;
 }
-
