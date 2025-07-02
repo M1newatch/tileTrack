@@ -22,23 +22,38 @@
 #endif
 
 using json = nlohmann::json;
-int GRID_SIZE = 0;
+unsigned int GRID_SIZE = 0;
 
+
+/**
+ * @brief representation of a tile 
+ * @var edges: open (O)/closed (X) connections on the tile edges 
+ * 
+ */
 struct Tile {
     std::string name;
     std::vector<std::vector<std::pair<float, float>>> walls;
-    std::vector<std::array<std::string, 4>> edges; // edges for each connection/rotation
-    int index = -1; // for reference
-    std::vector<std::vector<int>> validNeighbors; // [4][tileIndex]
+    std::vector<std::array<std::string, 4>> edges;
+    int index = -1;
+    std::vector<std::vector<int>> validNeighbors;
 };
 
-// Prüfe, ob zwei Kanten kompatibel sind
+/**
+ * @brief Checks if two edge match with closed or open connections
+ * @return true if edges match (open-to-open or wall-to-wall), false otherwise
+ */
 bool edgesMatch(const std::string& a, const std::string& b) {
     // Only allow open-to-open and wall-to-wall
     return (a == "O" && b == "O") || (a == "X" && b == "X");
 }
 
-// Rotiert die Walls eines Tiles um das Zentrum (0.5, 0.5)
+/**
+ * @brief Rotates the walls of a tile so the
+ * wall positions are updated according to the rotation.
+ *
+ * @param walls The original wall positions.
+ * @param rot The rotation angle in 90-degree increments (0-3).
+ */
 std::vector<std::vector<std::pair<float, float>>> rotateWalls(
     const std::vector<std::vector<std::pair<float, float>>>& walls, int rot) {
     std::vector<std::vector<std::pair<float, float>>> result = walls;
@@ -58,7 +73,7 @@ std::vector<std::vector<std::pair<float, float>>> rotateWalls(
     return result;
 }
 
-// Lade Tileset und erzeuge alle Rotationen
+// load tileset
 std::vector<Tile> loadTilesetWithEdges(const std::string& filename) {
     std::ifstream file(filename);
     json j;
@@ -71,35 +86,31 @@ std::vector<Tile> loadTilesetWithEdges(const std::string& filename) {
         tile.name = t["name"];
         for (const auto& wall : t["walls"]) {
             std::vector<std::pair<float, float>> wall_coords;
+            const float padding = 0.0025f; // 5% padding on each side
             for (const auto& coord : wall) {
-                wall_coords.emplace_back(coord[0], coord[1]);
+                // Move each coordinate towards the center (0.5, 0.5)
+                float x = coord[0];
+                float y = coord[1];
+                float x_padded = 0.5f + (x - 0.5f) * (1.0f - 2.0f * padding);
+                float y_padded = 0.5f + (y - 0.5f) * (1.0f - 2.0f * padding);
+                wall_coords.emplace_back(x_padded, y_padded);
             }
             tile.walls.push_back(wall_coords);
         }
-        // Edges: Wir nehmen die entry/exit_angle als Kanten-String (z.B. "0-180-0-180")
-        // Alternativ: Manuell im JSON als "edges" angeben, hier generisch:
         if (t.contains("edges")) {
-            // Optional: explizite Edges im JSON
             for (const auto& e : t["edges"]) {
                 std::array<std::string, 4> arr;
                 for (int i = 0; i < 4; ++i) arr[i] = e[i];
                 tile.edges.push_back(arr);
             }
-        } else if (t.contains("connections")) {
-            // Generiere aus connections eine Kantenbeschreibung
-            for (const auto& c : t["connections"]) {
-                std::array<std::string, 4> arr = {"X","X","X","X"};
-                int entry_dir = (static_cast<int>(std::round(c["entry_angle"].get<float>() / 90.0f)) % 4);
-                int exit_dir  = (static_cast<int>(std::round(c["exit_angle"].get<float>() / 90.0f)) % 4);
-                arr[entry_dir] = "O"; // Eingang
-                arr[exit_dir]  = "O"; // Ausgang
-                tile.edges.push_back(arr);
-            }
+        } else {
+            std::cout << "Missing edge definitions for tile: " << tile.name << std::endl;
+            tile.edges.push_back({"X", "X", "X", "X"});
         }
         tile.index = idx++;
         baseTiles.push_back(tile);
     }
-    //Erzeuge alle Rotationen und filtere Duplikate
+    // generate all rotations and filter duplicates
     for (const auto& tile : baseTiles) {
         for (int i = 0; i < tile.edges.size(); ++i) {
             Tile t = tile;
@@ -114,7 +125,7 @@ std::vector<Tile> loadTilesetWithEdges(const std::string& filename) {
             allTiles.push_back(t);
         }
     }
-    // Nachbarschaftslisten berechnen
+    // calculate adjacency list for each tile
     for (int t = 0; t < allTiles.size(); ++t) {
         allTiles[t].validNeighbors.resize(4);
         for (int dir = 0; dir < 4; ++dir) {
@@ -130,49 +141,10 @@ std::vector<Tile> loadTilesetWithEdges(const std::string& filename) {
 
 struct Cell {
     bool collapsed = false;
-    std::vector<int> options; // tile indices
+    std::vector<int> options;
 };
 
-// Neue Propagation wie im Beispiel
-void propagate(std::vector<std::vector<Cell>>& grid, const std::vector<Tile>& tiles, int DIM) {
-    bool changed = true;
-    while (changed) {
-        changed = false;
-        for (int y = 0; y < DIM; ++y) {
-            for (int x = 0; x < DIM; ++x) {
-                if (grid[y][x].collapsed) continue;
-                std::vector<int> options = grid[y][x].options;
-                // Für jede Richtung
-                for (int dir = 0; dir < 4; ++dir) {
-                    int nx = x, ny = y;
-                    if (dir == 0) nx++; // rechts
-                    if (dir == 1) ny++; // unten
-                    if (dir == 2) nx--; // links
-                    if (dir == 3) ny--; // oben
-                    if (nx < 0 || nx >= DIM || ny < 0 || ny >= DIM) continue;
-                    const auto& neighbor = grid[ny][nx];
-                    std::set<int> valid;
-                    for (int nOpt : neighbor.options) {
-                        for (int v : tiles[nOpt].validNeighbors[(dir+2)%4]) {
-                            valid.insert(v);
-                        }
-                    }
-                    // Filtere options auf Schnittmenge mit valid
-                    std::vector<int> newOptions;
-                    for (int opt : options) {
-                        if (valid.count(opt)) newOptions.push_back(opt);
-                    }
-                    if (newOptions.size() < options.size()) {
-                        options = newOptions;
-                        changed = true;
-                    }
-                }
-                grid[y][x].options = options;
-            }
-        }
-    }
-}
-
+// bounds for tiles so they dont overlap
 struct Bounds {
     float minX = std::numeric_limits<float>::max();
     float minY = std::numeric_limits<float>::max();
@@ -190,16 +162,18 @@ struct Bounds {
 
 Bounds calculateBounds(const std::list<Mazepolygon>& polygons) {
     Bounds bounds;
+
+    float padding = 0.01f;
+    bounds.minX += padding;
+    bounds.minY += padding;
+    bounds.maxX -= padding;
+    bounds.maxY -= padding;
+
     for (const auto& poly : polygons) {
         for (const auto& coord : poly.coordinates) {
             bounds.update(coord.x, coord.y);
         }
     }
-    float padding = 0.1f;
-    bounds.minX -= padding;
-    bounds.minY -= padding;
-    bounds.maxX += padding;
-    bounds.maxY += padding;
     return bounds;
 }
 
@@ -295,6 +269,38 @@ void generateMaze(std::vector<std::vector<MazeCell>>& maze, int DIM, std::mt1993
     }
 }
 
+void addCrossings(std::vector<std::vector<MazeCell>>& maze, int DIM, float crossingProbability, std::mt19937& rng, std::vector<Edge>& solutionEdges) {
+    std::uniform_real_distribution<float> probDist(0.0f, 1.0f);
+    for (int y = 1; y < DIM-1; ++y) {
+        for (int x = 1; x < DIM-1; ++x) {
+            int openCount = 0;
+            for (int d = 0; d < 4; ++d) {
+                if (!maze[y][x].walls[d]) openCount++;
+            }
+            if (openCount < 4 && probDist(rng) < crossingProbability) {
+                // Open all walls to make a fourway crossing
+                for (int d = 0; d < 4; ++d) {
+                    if (maze[y][x].walls[d]) { // Only add if wall was closed
+                        maze[y][x].walls[d] = false;
+                        int nx = x + (d == 0 ? 1 : d == 2 ? -1 : 0);
+                        int ny = y + (d == 1 ? 1 : d == 3 ? -1 : 0);
+                        if (nx >= 0 && nx < DIM && ny >= 0 && ny < DIM) {
+                            maze[ny][nx].walls[(d+2)%4] = false;
+                            // Add to solutionEdges if not already present
+                            Edge e1 = {{x, y}, {nx, ny}};
+                            Edge e2 = {{nx, ny}, {x, y}};
+                            if (std::find(solutionEdges.begin(), solutionEdges.end(), e1) == solutionEdges.end() &&
+                                std::find(solutionEdges.begin(), solutionEdges.end(), e2) == solutionEdges.end()) {
+                                solutionEdges.push_back(e1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 // Finde das passende Tile und Rotation für eine Maze-Zelle
 int findMatchingTile(const std::vector<Tile>& tiles, const bool walls[4], int x = -1, int y = -1) {
     for (int t = 0; t < tiles.size(); ++t) {
@@ -323,13 +329,14 @@ int findMatchingTile(const std::vector<Tile>& tiles, const bool walls[4], int x 
 
 int main(int argc, char* argv[]) {
     if (argc < 3 ) {
-        std::cout << "Usage: " << argv[0] << " <tileset.json> <output.cpp> [grid_size] [seed]\n";
+        std::cout << "Usage: " << argv[0] << " <tileset.json> <output.cpp> [grid_size] [crossing probability] [seed]\n";
         return 1;
     }
     std::string tileset_file = argv[1];
     std::string output_file = argv[2];
     unsigned int GRID_SIZE = argc > 3 ? std::stoul(argv[3]) : 10;
-    unsigned int seed = argc > 4 ? std::stoul(argv[4]) : std::random_device{}();
+    float crossing_probability = argc > 4 ? std::stof(argv[4]) : 0.1f;
+    float seed = argc > 5 ? std::stof(argv[5]) : std::random_device{}();
     std::mt19937 rng(seed);
 
     auto tiles = loadTilesetWithEdges(tileset_file);
@@ -338,6 +345,7 @@ int main(int argc, char* argv[]) {
     std::vector<std::vector<MazeCell>> maze(DIM, std::vector<MazeCell>(DIM));
     std::vector<Edge> solutionEdges;
     generateMaze(maze, DIM, rng, solutionEdges);
+    addCrossings(maze, DIM, crossing_probability, rng, solutionEdges);
 
     // Grid für Tiles
     std::vector<std::vector<Cell>> grid(DIM, std::vector<Cell>(DIM));
@@ -373,6 +381,7 @@ int main(int argc, char* argv[]) {
             float gy = y * 1.0f;
             float angle = 0.0f; // Walls sind schon rotiert
             for (const auto& wall : tile.walls) {
+
                 auto global_coords = transform(wall, gx, gy, angle);
                 Mazepolygon poly;
                 for (const auto& [gx, gy] : global_coords) {
@@ -382,26 +391,60 @@ int main(int argc, char* argv[]) {
             }
         }
     }
+
     exportSVG(polygons, "track.svg", solutionEdges, DIM);
     std::ofstream out(output_file);
-    out << "#include <list>\n#include \"maze_structs.h\"\n#include <vector>\n#include <utility>\n\n";
-    out << "void generateTrack(std::list<Mazepolygon>& polygons) {\n";
+    out << "#include <iostream>\n#include <list>\n#include <cmath>\n#include <vector>\n#include <unordered_map>\n\n#include \"maze_generator.h\"\n\n";
+    out << "void MazeGenerator::generateMaze() {\n";
     int idx = 0;
     for (const auto& poly : polygons) {
         out << "    Mazepolygon poly" << idx << ";\n";
         out << "    poly" << idx << ".coordinates = {";
         for (const auto& coord : poly.coordinates) {
-            out << "{" << std::fixed << std::setprecision(1) << coord.x << "f, " 
+            out << "{" << std::fixed << std::setprecision(5) << coord.x << "f, " 
                 << coord.y << "f}, ";
         }
         out << "};\n";
         out << "    polygons.push_back(poly" << idx << ");\n";
         idx++;
     }
-    out << "}\n";
-    out << "void generateSolutionGraph(std::vector<std::pair<std::pair<int,int>, std::pair<int,int>>>& edges) {\n";
+
+    // Build a mapping from node coordinates to their indices and count occurrences
+    std::map<std::pair<int, int>, int> coord_to_index;
+    std::map<std::pair<int, int>, int> coord_count;
+    int node_idx = 1;
     for (const auto& edge : solutionEdges) {
-        out << "    edges.push_back({{" << edge.first.first << ", " << edge.first.second << "}, {" << edge.second.first << ", " << edge.second.second << "}});\n";
+        coord_to_index[edge.first] = node_idx;
+        coord_count[edge.first]++;
+        node_idx++;
+    }
+    // Write SolutionGraphNodes
+    int j = 0;
+    for (const auto& edge : solutionEdges) {
+        j++;
+        out << "    SolutionGraphNode node" << j << ";\n";
+    }
+    // Write coordinates and neighbors
+    int i = 0;
+    for (const auto& edge : solutionEdges) {
+        i++;
+        out << "    node" << i << ".coordinate = {" << edge.first.first + 0.5f << "f, " << edge.first.second + 0.5f << "f};\n";
+        // Determine neighbors
+        auto curr = edge.first;
+        int prev_idx = (i > 1) ? i - 1 : -1;
+        int next_idx = (i < solutionEdges.size()) ? i + 1 : -1;
+        if (coord_count[curr] == 1) {
+            // Dead end: only previous neighbor
+            if (prev_idx > 0)
+                out << "    node" << i << ".neighbors.push_back(&node" << prev_idx << ");\n";
+        } else {
+            // Normal: previous and next neighbor
+            if (prev_idx > 0)
+                out << "    node" << i << ".neighbors.push_back(&node" << prev_idx << ");\n";
+            if (next_idx > 0 && next_idx <= solutionEdges.size())
+                out << "    node" << i << ".neighbors.push_back(&node" << next_idx << ");\n";
+        }
+        out << "    solutionGraph.push_back(node" << i << ");\n";
     }
     out << "}\n";
     out.close();
