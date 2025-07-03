@@ -10,94 +10,94 @@ void MazeGenerator::generateMaze()
 {
     // Polygon 1
     std::vector<MazeCoordinate> coords1 = {
-        {4.9f, 7.23f},  // start
-        {5.88f, 8.14f},
-        {6.41f, 8.79f},
-        {6.71f, 9.42f},
-        {6.88f, 10.2f},
-        {6.84f, 10.84f},
-        {6.75f, 11.18f},
-        {6.63f, 11.53f},
-        {6.4f, 11.86f},
-        {6.01f, 12.35f},
-        {5.35f, 12.76f},
-        {4.55f, 13.05f},
-        {3.84f, 13.07f},
-        {3.12f, 13.02f},
-        {2.47f, 12.77f},
-        {1.99f, 12.48f},
-        {1.6f, 12.07f},
-        {1.37f, 11.71f},
-        {1.19f, 11.25f},
-        {1.09f, 10.69f},
-        {1.12f, 10.12f},
-        {1.33f, 9.35f},
-        {1.6f, 8.95f},
-        {2.04f, 8.48f},
-        {2.5f, 8.04f},
-        {3.19f, 7.28f},
-        {2.43f, 6.58f},
-        {1.69f, 5.83f},
-        {1.3f, 5.25f},
-        {1.1f, 4.71f},
-        {1.02f, 4.09f},
-        {1.02f, 3.45f},
-        {1.15f, 2.86f},
-        {1.37f, 2.32f},
-        {1.73f, 1.83f},
-        {2.17f, 1.43f},
-        {2.94f, 1.06f},
-        {3.58f, 0.97f},
-        {4.19f, 1.04f},
-        {4.68f, 1.18f},
-        {5.09f, 1.41f},
-        {5.48f, 1.76f},
-        {7.02f, 3.2f},
-        {8.99f, 1.13f},
-        {9.6f, 0.51f},
-        {10.07f, 0.25f},
-        {10.47f, 0.15f},
-        {10.89f, 0.1f},
-        {11.29f, 0.1f},
-        {11.81f, 0.2f},
-        {12.22f, 0.36f},
-        {12.55f, 0.58f},
-        {12.83f, 0.84f},
-        {13.09f, 1.15f},
-        {13.24f, 1.38f},
-        {13.42f, 1.69f},
-        {13.55f, 2.12f},
-        {13.6f, 2.73f},
-        {13.58f, 3.45f},
-        {13.55f, 4.5f},
-        {13.57f, 9.93f},
-        {13.53f, 11.01f},
-        {13.47f, 11.5f},
-        {13.32f, 11.86f},
-        {13.16f, 12.2f},
-        {12.94f, 12.45f},
-        {12.63f, 12.76f},
-        {12.26f, 13.07f},
-        {11.75f, 13.24f},
-        {11.3f, 13.38f},
-        {10.76f, 13.4f},
-        {10.16f, 13.27f},
-        {9.65f, 12.99f},
-        {9.09f, 12.55f},
-        {8.7f, 11.89f},
-        {8.48f, 11.27f},
-        {8.45f, 10.81f},
-        {8.5f, 10.35f},
-        {8.63f, 9.89f},
-        {8.96f, 9.35f},
-        {9.27f, 8.92f},
-        {9.58f, 8.34f},
+        {4.9f, 7.2f},  // start
+        {5.9f, 8.1f},
+        {6.4f, 8.8f},
+        {6.7f, 9.4f},
+        {6.9f, 10.2f},
+        {6.8f, 10.8f},
+        {6.8f, 11.2f},
+        {6.6f, 11.5f},
+        {6.4f, 11.9f},
+        {6.0f, 12.4f},
+        {5.3f, 12.8f},
+        {4.6f, 13.1f},
+        {3.8f, 13.1f},
+        {3.1f, 13.0f},
+        {2.5f, 12.8f},
+        {2.0f, 12.5f},
+        {1.6f, 12.1f},
+        {1.4f, 11.7f},
+        {1.2f, 11.2f},
+        {1.1f, 10.7f},
+        {1.1f, 10.1f},
+        {1.3f, 9.4f},
+        {1.6f, 8.9f},
+        {2.0f, 8.5f},
+        {2.5f, 8.0f},
+        {3.2f, 7.3f},
+        {2.4f, 6.6f},
+        {1.7f, 5.8f},
+        {1.3f, 5.2f},
+        {1.1f, 4.7f},
+        {1.0f, 4.1f},
+        {1.0f, 3.5f},
+        {1.1f, 2.9f},
+        {1.4f, 2.3f},
+        {1.7f, 1.8f},
+        {2.2f, 1.4f},
+        {2.9f, 1.1f},
+        {3.6f, 1.0f},
+        {4.2f, 1.0f},
+        {4.7f, 1.2f},
+        {5.1f, 1.4f},
+        {5.5f, 1.8f},
+        {7.0f, 3.2f},
+        {9.0f, 1.1f},
+        {9.6f, 0.5f},
+        {10.1f, 0.2f},
+        {10.5f, 0.2f},
+        {10.9f, 0.1f},
+        {11.3f, 0.1f},
+        {11.8f, 0.2f},
+        {12.2f, 0.4f},
+        {12.6f, 0.6f},
+        {12.8f, 0.8f},
+        {13.1f, 1.1f},
+        {13.2f, 1.4f},
+        {13.4f, 1.7f},
+        {13.6f, 2.1f},
+        {13.6f, 2.7f},
+        {13.6f, 3.5f},
+        {13.6f, 4.5f},
+        {13.6f, 9.9f},
+        {13.5f, 11.0f},
+        {13.5f, 11.5f},
+        {13.3f, 11.9f},
+        {13.2f, 12.2f},
+        {12.9f, 12.4f},
+        {12.6f, 12.8f},
+        {12.3f, 13.1f},
+        {11.8f, 13.2f},
+        {11.3f, 13.4f},
+        {10.8f, 13.4f},
+        {10.2f, 13.3f},
+        {9.6f, 13.0f},
+        {9.1f, 12.6f},
+        {8.7f, 11.9f},
+        {8.5f, 11.3f},
+        {8.4f, 10.8f},
+        {8.5f, 10.4f},
+        {8.6f, 9.9f},
+        {9.0f, 9.4f},
+        {9.3f, 8.9f},
+        {9.6f, 8.3f},
         {9.6f, 7.7f},
-        {9.39f, 7.11f},
-        {9.02f, 6.72f},
-        {8.39f, 6.16f},
-        {7.79f, 5.59f},
-        {7.04f, 4.95f}   // end
+        {9.4f, 7.1f},
+        {9.0f, 6.7f},
+        {8.4f, 6.2f},
+        {7.8f, 5.6f},
+        {7.0f, 4.9f}   // end
     };
 
     Mazepolygon poly1;
@@ -109,19 +109,19 @@ void MazeGenerator::generateMaze()
 
     // Polygon 2
     std::vector<MazeCoordinate> coords2 = {
-        {4.03f, 8.15f},  // start
-        {5.11f, 9.16f},
-        {5.5f, 9.76f},
-        {5.58f, 10.32f},
-        {5.43f, 10.92f},
-        {5.09f, 11.44f},
-        {4.44f, 11.8f},
-        {3.82f, 11.89f},
-        {3.11f, 11.82f},
-        {2.59f, 11.46f},
-        {2.27f, 10.81f},
-        {2.27f, 10.23f},
-        {2.62f, 9.67f}   // end
+        {4.0f, 8.1f},  // start
+        {5.1f, 9.2f},
+        {5.5f, 9.8f},
+        {5.6f, 10.3f},
+        {5.4f, 10.9f},
+        {5.1f, 11.4f},
+        {4.4f, 11.8f},
+        {3.8f, 11.9f},
+        {3.1f, 11.8f},
+        {2.6f, 11.5f},
+        {2.3f, 10.8f},
+        {2.3f, 10.2f},
+        {2.6f, 9.7f}   // end
     };
 
     Mazepolygon poly2;
@@ -133,22 +133,22 @@ void MazeGenerator::generateMaze()
 
     // Polygon 3
     std::vector<MazeCoordinate> coords3 = {
-        {3.95f, 6.43f},  // start
-        {2.66f, 5.25f},
-        {2.25f, 4.49f},
-        {2.23f, 3.87f},
-        {2.27f, 3.44f},
-        {2.38f, 2.97f},
-        {2.66f, 2.6f},
-        {3.17f, 2.32f},
-        {3.67f, 2.26f},
-        {4.25f, 2.39f},
-        {4.55f, 2.73f},
-        {4.89f, 2.99f},
-        {5.24f, 3.33f},
-        {5.62f, 3.68f},
-        {6.1f, 4.13f},
-        {5.07f, 5.27f}   // end
+        {4.0f, 6.4f},  // start
+        {2.7f, 5.2f},
+        {2.2f, 4.5f},
+        {2.2f, 3.9f},
+        {2.3f, 3.4f},
+        {2.4f, 3.0f},
+        {2.7f, 2.6f},
+        {3.2f, 2.3f},
+        {3.7f, 2.3f},
+        {4.2f, 2.4f},
+        {4.6f, 2.7f},
+        {4.9f, 3.0f},
+        {5.2f, 3.3f},
+        {5.6f, 3.7f},
+        {6.1f, 4.1f},
+        {5.1f, 5.3f}   // end
     };
 
     Mazepolygon poly3;
@@ -160,29 +160,29 @@ void MazeGenerator::generateMaze()
 
     // Polygon 4
     std::vector<MazeCoordinate> coords4 = {
-        {7.86f, 4.08f},  // start
-        {10.05f, 1.74f},
-        {10.7f, 1.38f},
+        {7.9f, 4.1f},  // start
+        {10.1f, 1.7f},
+        {10.7f, 1.4f},
         {11.3f, 1.4f},
-        {11.75f, 1.59f},
-        {12.03f, 1.91f},
-        {12.29f, 2.43f},
-        {12.33f, 2.99f},
-        {12.31f, 3.89f},
-        {12.31f, 10.75f},
-        {12.14f, 11.55f},
-        {11.62f, 12.08f},
-        {11.06f, 12.23f},
-        {10.37f, 12.1f},
-        {9.84f, 11.65f},
-        {9.66f, 10.99f},
-        {9.84f, 10.23f},
-        {10.31f, 9.55f},
-        {10.63f, 8.92f},
-        {10.78f, 8.17f},
-        {10.7f, 7.48f},
-        {10.48f, 6.73f},
-        {10.16f, 6.23f}   // end
+        {11.8f, 1.6f},
+        {12.0f, 1.9f},
+        {12.3f, 2.4f},
+        {12.3f, 3.0f},
+        {12.3f, 3.9f},
+        {12.3f, 10.8f},
+        {12.1f, 11.6f},
+        {11.6f, 12.1f},
+        {11.1f, 12.2f},
+        {10.4f, 12.1f},
+        {9.8f, 11.6f},
+        {9.7f, 11.0f},
+        {9.8f, 10.2f},
+        {10.3f, 9.6f},
+        {10.6f, 8.9f},
+        {10.8f, 8.2f},
+        {10.7f, 7.5f},
+        {10.5f, 6.7f},
+        {10.2f, 6.2f}   // end
     };
 
     Mazepolygon poly4;
@@ -194,121 +194,121 @@ void MazeGenerator::generateMaze()
 
     // Solution path 1 nodes
     SolutionGraphNode node1;
-    node1.coordinate = {7.38f, 3.7f};
+    node1.coordinate = {7.4f, 3.7f};
     SolutionGraphNode node2;
-    node2.coordinate = {7.46f, 3.59f};
+    node2.coordinate = {7.5f, 3.6f};
     SolutionGraphNode node3;
-    node3.coordinate = {7.85f, 3.2f};
+    node3.coordinate = {7.8f, 3.2f};
     SolutionGraphNode node4;
-    node4.coordinate = {8.22f, 2.76f};
+    node4.coordinate = {8.2f, 2.8f};
     SolutionGraphNode node5;
-    node5.coordinate = {8.64f, 2.34f};
+    node5.coordinate = {8.6f, 2.3f};
     SolutionGraphNode node6;
-    node6.coordinate = {8.97f, 1.95f};
+    node6.coordinate = {9.0f, 2.0f};
     SolutionGraphNode node7;
-    node7.coordinate = {9.64f, 1.25f};
+    node7.coordinate = {9.6f, 1.2f};
     SolutionGraphNode node8;
-    node8.coordinate = {10.53f, 0.76f};
+    node8.coordinate = {10.5f, 0.8f};
     SolutionGraphNode node9;
-    node9.coordinate = {11.51f, 0.76f};
+    node9.coordinate = {11.5f, 0.8f};
     SolutionGraphNode node10;
-    node10.coordinate = {12.27f, 1.17f};
+    node10.coordinate = {12.3f, 1.2f};
     SolutionGraphNode node11;
-    node11.coordinate = {12.65f, 1.75f};
+    node11.coordinate = {12.6f, 1.8f};
     SolutionGraphNode node12;
-    node12.coordinate = {12.88f, 2.49f};
+    node12.coordinate = {12.9f, 2.5f};
     SolutionGraphNode node13;
-    node13.coordinate = {12.92f, 3.63f};
+    node13.coordinate = {12.9f, 3.6f};
     SolutionGraphNode node14;
-    node14.coordinate = {12.92f, 5.82f};
+    node14.coordinate = {12.9f, 5.8f};
     SolutionGraphNode node15;
-    node15.coordinate = {12.92f, 9.14f};
+    node15.coordinate = {12.9f, 9.1f};
     SolutionGraphNode node16;
-    node16.coordinate = {12.85f, 11.41f};
+    node16.coordinate = {12.9f, 11.4f};
     SolutionGraphNode node17;
-    node17.coordinate = {12.39f, 12.2f};
+    node17.coordinate = {12.4f, 12.2f};
     SolutionGraphNode node18;
-    node18.coordinate = {11.76f, 12.65f};
+    node18.coordinate = {11.8f, 12.6f};
     SolutionGraphNode node19;
-    node19.coordinate = {11.16f, 12.81f};
+    node19.coordinate = {11.2f, 12.8f};
     SolutionGraphNode node20;
-    node20.coordinate = {10.43f, 12.79f};
+    node20.coordinate = {10.4f, 12.8f};
     SolutionGraphNode node21;
-    node21.coordinate = {9.76f, 12.46f};
+    node21.coordinate = {9.8f, 12.5f};
     SolutionGraphNode node22;
-    node22.coordinate = {9.22f, 11.81f};
+    node22.coordinate = {9.2f, 11.8f};
     SolutionGraphNode node23;
-    node23.coordinate = {9.03f, 11.26f};
+    node23.coordinate = {9.0f, 11.3f};
     SolutionGraphNode node24;
-    node24.coordinate = {9.22f, 10f};
+    node24.coordinate = {9.2f, 10.0f};
     SolutionGraphNode node25;
-    node25.coordinate = {9.73f, 9.22f};
+    node25.coordinate = {9.7f, 9.2f};
     SolutionGraphNode node26;
-    node26.coordinate = {10.15f, 8.34f};
+    node26.coordinate = {10.1f, 8.3f};
     SolutionGraphNode node27;
-    node27.coordinate = {10.11f, 7.45f};
+    node27.coordinate = {10.1f, 7.4f};
     SolutionGraphNode node28;
-    node28.coordinate = {9.61f, 6.6f};
+    node28.coordinate = {9.6f, 6.6f};
     SolutionGraphNode node29;
-    node29.coordinate = {8.02f, 5.1f};
+    node29.coordinate = {8.0f, 5.1f};
     SolutionGraphNode node30;
-    node30.coordinate = {7.03f, 4.06f};
+    node30.coordinate = {7.0f, 4.1f};
     SolutionGraphNode node31;
-    node31.coordinate = {5.45f, 2.71f};
+    node31.coordinate = {5.4f, 2.7f};
     SolutionGraphNode node32;
-    node32.coordinate = {4.37f, 1.8f};
+    node32.coordinate = {4.4f, 1.8f};
     SolutionGraphNode node33;
-    node33.coordinate = {3.29f, 1.64f};
+    node33.coordinate = {3.3f, 1.6f};
     SolutionGraphNode node34;
-    node34.coordinate = {2.67f, 1.85f};
+    node34.coordinate = {2.7f, 1.9f};
     SolutionGraphNode node35;
-    node35.coordinate = {2.07f, 2.32f};
+    node35.coordinate = {2.1f, 2.3f};
     SolutionGraphNode node36;
-    node36.coordinate = {1.75f, 3.05f};
+    node36.coordinate = {1.8f, 3.0f};
     SolutionGraphNode node37;
-    node37.coordinate = {1.63f, 3.95f};
+    node37.coordinate = {1.6f, 4.0f};
     SolutionGraphNode node38;
-    node38.coordinate = {1.84f, 5.03f};
+    node38.coordinate = {1.8f, 5.0f};
     SolutionGraphNode node39;
-    node39.coordinate = {3.59f, 6.94f};
+    node39.coordinate = {3.6f, 6.9f};
     SolutionGraphNode node40;
-    node40.coordinate = {5.18f, 8.42f};
+    node40.coordinate = {5.2f, 8.4f};
     SolutionGraphNode node41;
-    node41.coordinate = {5.98f, 9.37f};
+    node41.coordinate = {6.0f, 9.4f};
     SolutionGraphNode node42;
-    node42.coordinate = {6.17f, 10.14f};
+    node42.coordinate = {6.2f, 10.1f};
     SolutionGraphNode node43;
-    node43.coordinate = {6.08f, 10.96f};
+    node43.coordinate = {6.1f, 11.0f};
     SolutionGraphNode node44;
-    node44.coordinate = {5.69f, 11.75f};
+    node44.coordinate = {5.7f, 11.8f};
     SolutionGraphNode node45;
-    node45.coordinate = {4.87f, 12.27f};
+    node45.coordinate = {4.9f, 12.3f};
     SolutionGraphNode node46;
-    node46.coordinate = {3.98f, 12.49f};
+    node46.coordinate = {4.0f, 12.5f};
     SolutionGraphNode node47;
-    node47.coordinate = {2.97f, 12.43f};
+    node47.coordinate = {3.0f, 12.4f};
     SolutionGraphNode node48;
-    node48.coordinate = {2.32f, 12.03f};
+    node48.coordinate = {2.3f, 12.0f};
     SolutionGraphNode node49;
-    node49.coordinate = {1.86f, 11.35f};
+    node49.coordinate = {1.9f, 11.4f};
     SolutionGraphNode node50;
-    node50.coordinate = {1.63f, 10.54f};
+    node50.coordinate = {1.6f, 10.5f};
     SolutionGraphNode node51;
-    node51.coordinate = {1.83f, 9.77f};
+    node51.coordinate = {1.8f, 9.8f};
     SolutionGraphNode node52;
-    node52.coordinate = {2.33f, 9.11f};
+    node52.coordinate = {2.3f, 9.1f};
     SolutionGraphNode node53;
-    node53.coordinate = {2.79f, 8.52f};
+    node53.coordinate = {2.8f, 8.5f};
     SolutionGraphNode node54;
-    node54.coordinate = {3.52f, 7.83f};
+    node54.coordinate = {3.5f, 7.8f};
     SolutionGraphNode node55;
-    node55.coordinate = {3.95f, 7.1f};
+    node55.coordinate = {4.0f, 7.1f};
     SolutionGraphNode node56;
-    node56.coordinate = {4.82f, 6.48f};
+    node56.coordinate = {4.8f, 6.5f};
     SolutionGraphNode node57;
-    node57.coordinate = {5.38f, 5.76f};
+    node57.coordinate = {5.4f, 5.8f};
     SolutionGraphNode node58;
-    node58.coordinate = {6.8f, 4.28f};
+    node58.coordinate = {6.8f, 4.3f};
 
     solutionGraph.push_back(node1);
     solutionGraph.push_back(node2);

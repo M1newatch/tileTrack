@@ -4,6 +4,7 @@
 #include <vector>
 #include <sstream>
 #include <regex>
+#include <iomanip>
 
 struct Point {
     float x, y;
@@ -106,13 +107,17 @@ private:
         
         outFile << "void MazeGenerator::generateMaze()\n{\n";
         
+        // Set fixed precision for float output
+        outFile << std::fixed << std::setprecision(1);
+        
         // Generate polygons
         for (size_t i = 0; i < polygons.size(); ++i) {
             outFile << "    // Polygon " << (i + 1) << "\n";
             outFile << "    std::vector<MazeCoordinate> coords" << (i + 1) << " = {\n";
             
             for (size_t j = 0; j < polygons[i].points.size(); ++j) {
-                outFile << "        {" << polygons[i].points[j].x << "f, " 
+                outFile << "        {" << std::fixed << std::setprecision(1) 
+                        << polygons[i].points[j].x << "f, " 
                         << polygons[i].points[j].y << "f}";
                 
                 if (j == 0) outFile << ",  // start";
@@ -144,6 +149,7 @@ private:
                 
                 outFile << "    SolutionGraphNode node" << nodeCounter << ";\n";
                 outFile << "    node" << nodeCounter << ".coordinate = {" 
+                        << std::fixed << std::setprecision(1)
                         << node.x << "f, " << node.y << "f};\n";
                 
                 pathNodeNumbers.push_back(nodeCounter);
