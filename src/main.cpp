@@ -504,7 +504,7 @@ int main(int argc, char* argv[]) {
     }
     out << "}\n";
     out.close();
-    std::cout << "SVG-Visualisierung in track3.svg gespeichert.\n";
+    std::cout << "SVG-Visualisierung in track.svg gespeichert.\n";
     std::cout << "Track generiert und in " << output_file << " geschrieben.\n";
     std::cout << "Anzahl der generierten Polygone: " << polygons.size() << "\n";
     return 0;

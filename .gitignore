@@ -2,3 +2,4 @@ trackgen.exe
 .vscode
 track.svg
 output.cpp
+svg_tiles/
