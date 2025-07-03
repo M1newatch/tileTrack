@@ -73,7 +73,12 @@ std::vector<std::vector<std::pair<float, float>>> rotateWalls(
     return result;
 }
 
-// load tileset
+/**
+ * @brief Loads a tileset from a JSON file and generates all rotations.
+ *
+ * @param filename The path to the JSON file.
+ * @return std::vector<Tile> A vector of all tiles with their rotations.
+ */
 std::vector<Tile> loadTilesetWithEdges(const std::string& filename) {
     std::ifstream file(filename);
     json j;
@@ -177,9 +182,17 @@ Bounds calculateBounds(const std::list<Mazepolygon>& polygons) {
     return bounds;
 }
 
-// Hilfsstruktur für Kanten
+// helper
 using Edge = std::pair<std::pair<int,int>, std::pair<int,int>>;
 
+/**
+ * @brief Exports the maze polygons and solution edges to an SVG file.
+ *
+ * @param polygons The maze polygons to export.
+ * @param filename The name of the output SVG file.
+ * @param solutionEdges The solution edges to include in the SVG.
+ * @param DIM The dimension of the maze.
+ */
 void exportSVG(const std::list<Mazepolygon>& polygons, const std::string& filename, const std::vector<Edge>& solutionEdges, int DIM) {
     std::ofstream svg(filename);
     Bounds bounds = calculateBounds(polygons);
@@ -187,7 +200,7 @@ void exportSVG(const std::list<Mazepolygon>& polygons, const std::string& filena
     char header[512];
     snprintf(header, sizeof(header), "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"%d\" height=\"%d\" viewBox=\"%f %f %f %f\">\n    <rect width=\"100%%\" height=\"100%%\" fill=\"#f8f8f8\"/>\n", 1000, 1000, bounds.minX, bounds.minY, bounds.width(), bounds.height());
     svg << header;
-    // Grid zeichnen
+    // draw grid
     svg << "    <g stroke=\"#bbb\" stroke-width=\"0.02\">\n";
     for (int i = 0; i <= GRID_SIZE; ++i) {
         float x = i * 1.0f;
@@ -196,7 +209,7 @@ void exportSVG(const std::list<Mazepolygon>& polygons, const std::string& filena
     }
     svg << "    </g>\n";
     svg << "    <circle cx=\"0\" cy=\"0\" r=\"0.2\" fill=\"red\"/>\n";
-    // Lösungslinien
+    // solutiongraph lines
     svg << "    <g stroke=\"#d22\" stroke-width=\"0.05\">\n";
     for (const auto& edge : solutionEdges) {
         float x1 = edge.first.first + 0.5f;
@@ -221,7 +234,15 @@ void exportSVG(const std::list<Mazepolygon>& polygons, const std::string& filena
     svg.close();
 }
 
-// Transformiere Koordinaten (Hilfsfunktion)
+/**
+ * @brief Transforms a set of 2D coordinates by applying translation and rotation.
+ *
+ * @param coords The coordinates to transform.
+ * @param dx The translation in the x direction.
+ * @param dy The translation in the y direction.
+ * @param angle_rad The rotation angle in radians.
+ * @return The transformed coordinates.
+ */
 std::vector<std::pair<float, float>> transform(const std::vector<std::pair<float, float>>& coords, float dx, float dy, float angle_rad) {
     std::vector<std::pair<float, float>> result;
     float cos_a = std::cos(angle_rad);
@@ -234,12 +255,19 @@ std::vector<std::pair<float, float>> transform(const std::vector<std::pair<float
     return result;
 }
 
-// Maze-Generierung mit DFS
 struct MazeCell {
     bool visited = false;
     bool walls[4] = {true, true, true, true}; // 0: rechts, 1: unten, 2: links, 3: oben
 };
 
+/**
+ * @brief Generates a random maze using depth-first search.
+ *
+ * @param maze The maze to modify.
+ * @param DIM The dimension of the maze.
+ * @param rng The random number generator.
+ * @param solutionEdges The solution edges to update.
+ */
 void generateMaze(std::vector<std::vector<MazeCell>>& maze, int DIM, std::mt19937& rng, std::vector<Edge>& solutionEdges) {
     std::stack<std::pair<int, int>> stack;
     stack.push({0, 0});
@@ -259,7 +287,7 @@ void generateMaze(std::vector<std::vector<MazeCell>>& maze, int DIM, std::mt1993
                 maze[ny][nx].walls[(dir+2)%4] = false;
                 maze[ny][nx].visited = true;
                 stack.push({nx, ny});
-                // Kante zum Lösungsgraphen hinzufügen
+                // add edge to solutiongraph
                 solutionEdges.push_back({{x, y}, {nx, ny}});
                 moved = true;
                 break;
@@ -269,6 +297,15 @@ void generateMaze(std::vector<std::vector<MazeCell>>& maze, int DIM, std::mt1993
     }
 }
 
+/**
+ * @brief Adds crossings to the maze.
+ *
+ * @param maze The maze to modify.
+ * @param DIM The dimension of the maze.
+ * @param crossingProbability The probability of adding a crossing.
+ * @param rng The random number generator.
+ * @param solutionEdges The solution edges to update.
+ */
 void addCrossings(std::vector<std::vector<MazeCell>>& maze, int DIM, float crossingProbability, std::mt19937& rng, std::vector<Edge>& solutionEdges) {
     std::uniform_real_distribution<float> probDist(0.0f, 1.0f);
     for (int y = 1; y < DIM-1; ++y) {
@@ -280,7 +317,7 @@ void addCrossings(std::vector<std::vector<MazeCell>>& maze, int DIM, float cross
             if (openCount < 4 && probDist(rng) < crossingProbability) {
                 // Open all walls to make a fourway crossing
                 for (int d = 0; d < 4; ++d) {
-                    if (maze[y][x].walls[d]) { // Only add if wall was closed
+                    if (maze[y][x].walls[d]) {
                         maze[y][x].walls[d] = false;
                         int nx = x + (d == 0 ? 1 : d == 2 ? -1 : 0);
                         int ny = y + (d == 1 ? 1 : d == 3 ? -1 : 0);
@@ -301,14 +338,21 @@ void addCrossings(std::vector<std::vector<MazeCell>>& maze, int DIM, float cross
     }
 }
 
-// Finde das passende Tile und Rotation für eine Maze-Zelle
+/**
+ * @brief Finds a matching tile for a given set of wall configurations.
+ *
+ * @param tiles The list of available tiles.
+ * @param walls The wall configurations to match.
+ * @param x The x-coordinate of the cell (for debugging purposes).
+ * @param y The y-coordinate of the cell (for debugging purposes).
+ * @return int The index of the matching tile, or -1 if none found.
+ */
 int findMatchingTile(const std::vector<Tile>& tiles, const bool walls[4], int x = -1, int y = -1) {
     for (int t = 0; t < tiles.size(); ++t) {
         for (int rot = 0; rot < 4; ++rot) {
             const auto& edge = tiles[t].edges[0];
             bool match = true;
             for (int d = 0; d < 4; ++d) {
-                // Wand: edge muss "X", offen: edge muss "O"
                 if (walls[d]) {
                     if (edge[d] != "X") { match = false; break; }
                 } else {
@@ -318,15 +362,26 @@ int findMatchingTile(const std::vector<Tile>& tiles, const bool walls[4], int x 
             if (match) return t;
         }
     }
-    // Debug-Ausgabe für fehlende Kombinationen
+    // missing combinations
     if (x >= 0 && y >= 0) {
         std::cout << "Kein passendes Tile für Zelle (" << x << "," << y << ") mit Wänden: ";
         for (int d = 0; d < 4; ++d) std::cout << (walls[d] ? "1" : "0");
         std::cout << std::endl;
     }
-    return -1; // Kein passendes Tile gefunden
+    return -1;
 }
 
+/**
+ * @brief Finds a matching tile for a given set of wall configurations.
+ *
+ * @param argv
+ *         [1] - Path to the source tileset JSON file
+ *         [2] - Output file for the generated maze
+ *         [3] - Grid size (optional, default 10)
+ *         [4] - Crossing probability (optional, default 0.1)
+ *         [5] - Seed (optional, default random), allows reproducible results
+ * @return Output file with generated maze represented as polygons.
+ */
 int main(int argc, char* argv[]) {
     if (argc < 3 ) {
         std::cout << "Usage: " << argv[0] << " <tileset.json> <output.cpp> [grid_size] [crossing probability] [seed]\n";
@@ -334,20 +389,21 @@ int main(int argc, char* argv[]) {
     }
     std::string tileset_file = argv[1];
     std::string output_file = argv[2];
-    unsigned int GRID_SIZE = argc > 3 ? std::stoul(argv[3]) : 10;
+    unsigned int grid_size = argc > 3 ? std::stoul(argv[3]) : 10;
     float crossing_probability = argc > 4 ? std::stof(argv[4]) : 0.1f;
     float seed = argc > 5 ? std::stof(argv[5]) : std::random_device{}();
     std::mt19937 rng(seed);
 
     auto tiles = loadTilesetWithEdges(tileset_file);
-    int DIM = GRID_SIZE;
-    // Maze generieren
+    int DIM = grid_size;
+
+    // generate maze
     std::vector<std::vector<MazeCell>> maze(DIM, std::vector<MazeCell>(DIM));
     std::vector<Edge> solutionEdges;
     generateMaze(maze, DIM, rng, solutionEdges);
     addCrossings(maze, DIM, crossing_probability, rng, solutionEdges);
 
-    // Grid für Tiles
+    // grid für Tiles
     std::vector<std::vector<Cell>> grid(DIM, std::vector<Cell>(DIM));
     for (int y = 0; y < DIM; ++y) {
         for (int x = 0; x < DIM; ++x) {
@@ -356,7 +412,7 @@ int main(int argc, char* argv[]) {
                 grid[y][x].collapsed = true;
                 grid[y][x].options = {tileIdx};
             } else {
-                // Fallback: Blocktile
+                // Blocktile
                 int block_index = -1;
                 for (int i = 0; i < tiles.size(); ++i) {
                     if (tiles[i].name.find("block") != std::string::npos) {
@@ -370,7 +426,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // Polygone generieren
+    // generate polygons
     std::list<Mazepolygon> polygons;
     for (int y = 0; y < DIM; ++y) {
         for (int x = 0; x < DIM; ++x) {
@@ -379,7 +435,7 @@ int main(int argc, char* argv[]) {
             const Tile& tile = tiles[cell.options[0]];
             float gx = x * 1.0f;
             float gy = y * 1.0f;
-            float angle = 0.0f; // Walls sind schon rotiert
+            float angle = 0.0f;
             for (const auto& wall : tile.walls) {
 
                 auto global_coords = transform(wall, gx, gy, angle);
