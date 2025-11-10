@@ -70,7 +70,7 @@ python tileset_to_svg.py
 **maze generation:**
 - SVG representation saved in track.svg
 - Track generated and saved in output.cpp
-- NUmmber of generated polygons: [num]
+- Number of generated polygons: [num]
 
 **svg conversion**
 - SVG files generated in svg_tiles/ directory
